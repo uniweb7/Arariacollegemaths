@@ -101,7 +101,7 @@
             text-shadow: 1px 1px 0px rgba(0,0,0,0.05);
         }
 
-        .nav-buttons { display: flex; gap: 12px; align-items: center; }
+        .nav-buttons { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 
         /* ENHANCED ACTION BUTTONS */
         .btn {
@@ -127,6 +127,10 @@
         .btn-print:hover { background-color: var(--warning-orange); color: var(--white); }
         .btn-admin { background-color: var(--danger-red); color: var(--white); border-color: var(--danger-red); }
         .btn-admin:hover { background-color: #881208; color: var(--white); }
+
+        /* ADMIN DASHBOARD BUTTON (New) */
+        .btn-dashboard { background-color: #27ae60; color: var(--white); border-color: #27ae60; animation: pulseGlow 2s infinite; }
+        .btn-dashboard:hover { background-color: #1e8449; transform: scale(1.02); }
 
         /* HIGHLIGHTED GROUP CHAT BUTTON */
         .btn-group-chat-highlight {
@@ -277,7 +281,7 @@
 <body>
 <!-- End of Part 1 -->
     <!-- ==========================================
-         TOP NAVIGATION BAR
+         TOP NAVIGATION BAR - UPDATED WITH ADMIN DASHBOARD BUTTON
          ========================================== -->
     <header class="top-header no-print">
         <div class="header-logo-section">
@@ -288,6 +292,8 @@
             <button class="btn btn-home" onclick="navigateTo('homePage')">🏠 Home</button>
             <button class="btn btn-back" onclick="goBack()">⬅ Back</button>
             <div id="sessionDisplay" style="display: none; margin-right: 10px;"></div>
+            <!-- NEW: ADMIN DASHBOARD BUTTON (Shows after login) -->
+            <button class="btn btn-dashboard" id="adminDashboardBtn" style="display: none;" onclick="navigateTo('adminDashboard'); switchAdminTab('viewAllData')">📊 Admin Dashboard</button>
             <button class="btn btn-admin" id="webDevBtn" onclick="navigateTo('adminLogin')">🔒 Web Dev</button>
             <button class="btn" id="logoutBtn" style="background-color: var(--danger-red); color: white; display: none;" onclick="logoutAdmin()">🚪 Log Out</button>
         </div>
@@ -1213,6 +1219,8 @@
                     isSuperAdminLoggedIn = true;
                     adminSessionExpiryTime = session.expiryTime;
                     updateSessionDisplay();
+                    // NEW: Show Admin Dashboard Button in navbar
+                    document.getElementById('adminDashboardBtn').style.display = 'inline-flex';
                     navigateTo('adminDashboard');
                     switchAdminTab('viewAllData');
                     document.getElementById('webDevBtn').style.display = 'none';
@@ -1948,6 +1956,8 @@
                 // Update UI
                 document.getElementById('webDevBtn').style.display = 'none';
                 document.getElementById('logoutBtn').style.display = 'inline-flex';
+                // NEW: Show Admin Dashboard Button
+                document.getElementById('adminDashboardBtn').style.display = 'inline-flex';
                 updateSessionDisplay();
                 startSessionTimer();
                 
@@ -1966,6 +1976,7 @@
             showToast('✅ Logged out securely. Session data cleared.', 'success');
             document.getElementById('webDevBtn').style.display = 'inline-flex';
             document.getElementById('logoutBtn').style.display = 'none';
+            document.getElementById('adminDashboardBtn').style.display = 'none';
             document.getElementById('sessionDisplay').style.display = 'none';
             navigateTo('homePage');
         }
@@ -2100,4 +2111,4 @@
         };
     </script>
 </body>
-    </html>
+                                                                                                                    </html>
