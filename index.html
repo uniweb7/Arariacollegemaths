@@ -263,6 +263,9 @@
         .form-group input { width: 100%; padding: 12px 15px; border: 2px solid var(--border-color); border-radius: 6px; font-size: 1.05rem; color: var(--text-main); outline: none; transition: all 0.3s ease; background: var(--bg-gray);}
         .form-group input:focus { border-color: var(--secondary-blue); background: var(--white); box-shadow: 0 0 8px rgba(31, 97, 141, 0.2); }
 
+        /* 72-HOUR SESSION DISPLAY */
+        .session-timer { background: #e8f5e9; color: var(--success-green); padding: 8px 12px; border-radius: 4px; font-weight: 700; font-size: 0.85rem; border: 1px solid var(--success-green); }
+
         /* Print Settings */
         @media print {
             .no-print, .top-header, .quick-action-bar, .chat-modal { display: none !important; }
@@ -284,7 +287,9 @@
         <div class="nav-buttons">
             <button class="btn btn-home" onclick="navigateTo('homePage')">🏠 Home</button>
             <button class="btn btn-back" onclick="goBack()">⬅ Back</button>
-            <button class="btn btn-admin" onclick="navigateTo('adminLogin')">🔒 Web Dev</button>
+            <div id="sessionDisplay" style="display: none; margin-right: 10px;"></div>
+            <button class="btn btn-admin" id="webDevBtn" onclick="navigateTo('adminLogin')">🔒 Web Dev</button>
+            <button class="btn" id="logoutBtn" style="background-color: var(--danger-red); color: white; display: none;" onclick="logoutAdmin()">🚪 Log Out</button>
         </div>
     </header>
 
@@ -518,7 +523,8 @@
                     <div style="font-size: 3.5rem; margin-bottom: 10px;">💻</div>
                     <h2 style="color: var(--primary-blue); font-weight: 800; text-transform: uppercase;">Web Dev Access</h2>
                     <p style="color: var(--danger-red); margin-bottom: 20px; font-size: 0.85rem; font-weight: 700; background: #fdedec; padding: 10px; border: 1px solid var(--danger-red); border-radius: 4px;">
-                        RESTRICTED AREA. ALL ACTIONS ARE SECURELY LOGGED.
+                        RESTRICTED AREA. ALL ACTIONS ARE SECURELY LOGGED.<br>
+                        <span style="color: var(--success-green);">✅ 72-HOUR SESSION ENABLED - Login once, stay logged for 72 hours</span>
                     </p>
                     
                     <div class="form-group">
@@ -664,7 +670,6 @@
                 <div class="nav-buttons">
                     <button class="btn btn-print ui-print-btn no-print" onclick="window.print()">🖨️ Print View</button>
                     <button class="btn no-print" style="background-color: var(--secondary-blue); color: white; border-color: var(--secondary-blue);" onclick="alert('Bulk TR/ID Printing Engine Initiated...')">🖨️ Bulk Print All TR</button>
-                    <button class="btn btn-admin no-print" onclick="logoutAdmin()">🚪 Log Out</button>
                 </div>
             </div>
             
@@ -769,11 +774,11 @@
                     </div>
                 </div>
 
-                <!-- NEW TAB 3: TR UPLOAD REGISTER (BASED ON SKETCH 2) -->
+                <!-- NEW TAB 3: TR UPLOAD REGISTER (BASED ON SKETCH 2) - WITH AUTO-TAB & REAL-TIME SYNC -->
                 <div id="trUploadRegister" class="admin-tab" style="display: none; animation: fadeSlideIn 0.3s ease;">
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 20px;">
                         <h3 style="margin: 0; font-size: 1.15rem; text-transform: uppercase;">Marksheet TR Upload Register</h3>
-                        <button class="btn" style="background: var(--success-green); color: white;" onclick="saveAllTrData()">💾 Save All Register Data</button>
+                        <button class="btn" style="background: var(--success-green); color: white;" onclick="saveAllTrData()">💾 Save & Sync All Marks</button>
                     </div>
                     
                     <div style="background: var(--white); padding: 20px; border: 2px solid var(--border-color); border-radius: 6px; box-shadow: var(--shadow-light); overflow-x: auto;">
@@ -782,6 +787,10 @@
                             <input type="text" id="liveTrRollInput" placeholder="Enter Roll No. to Load/Add..." style="padding: 10px 15px; border: 2px solid var(--primary-blue); border-radius: 4px; font-weight: bold; width: 280px; font-size: 1rem;">
                             <button class="btn" style="background: var(--primary-blue); color: white; padding: 10px 20px;" onclick="addOrFetchTrRoll()">Load / Add to Register</button>
                             <span id="liveTrRollStatus" style="font-weight: bold; color: var(--danger-red); margin-left: 10px;"></span>
+                        </div>
+
+                        <div style="background: #e8f5e9; padding: 10px; border-radius: 4px; margin-bottom: 15px; color: var(--success-green); font-weight: bold; font-size: 0.9rem;">
+                            💡 AUTO-TAB FEATURE ENABLED: Type a digit to fill, press TAB or hit the decimal point to auto-jump to next column. Real-time sync to database!
                         </div>
 
                         <!-- Wide Table matching the Sketch -->
@@ -813,7 +822,7 @@
                                 <tr><td colspan="16" style="text-align: center; color: var(--text-light); padding: 20px;">Enter a Roll Number above to start adding Marks into the Register.</td></tr>
                             </tbody>
                         </table>
-                        <p style="font-size: 0.85rem; color: var(--danger-red); margin-top: 15px; font-weight: bold;">* Note: Type numbers in CIA and Theory. Totals will be auto-calculated on the student's marksheet. Empty fields will remain blank.</p>
+                        <p style="font-size: 0.85rem; color: var(--danger-red); margin-top: 15px; font-weight: bold;">* Note: Type numbers in CIA and Theory. Totals will be auto-calculated on the student's marksheet. Empty fields will remain blank. Marks auto-sync to Firebase in real-time!</p>
                     </div>
                 </div>
 
@@ -1154,7 +1163,7 @@
 
 <!-- End of Part 4 -->
     <!-- ==========================================
-         PART 5 START: JAVASCRIPT, FIREBASE & 100% RESTORED DATABASE
+         PART 5 START: JAVASCRIPT, FIREBASE & 100% RESTORED DATABASE + NEW FEATURES
          ========================================== -->
     <script>
         /* =========================================================
@@ -1178,18 +1187,68 @@
         /* =========================================================
            2. SYSTEM VARIABLES & USER IDENTITY
            ========================================================= */
-        const ADMIN_ID = "Webdev"; // Name changed to Web Dev
+        const ADMIN_ID = "Webdev";
         const ADMIN_PASS = "9162127219";
 
         let currentActiveStudent = null;
         let isSuperAdminLoggedIn = false;
         let pageHistory = ['homePage'];
+        let adminSessionExpiryTime = null;
         
         // Generate Unique Identity for Normal Users (e.g., User_8492)
         const myUserId = "User_" + Math.floor(1000 + Math.random() * 9000);
 
         // Subject Structure mapping
         const trSubjects = ["MJC-3", "MJC-4", "MIC", "MDC", "AEC", "SEC"];
+
+        /* =========================================================
+           FEATURE 1: 72-HOUR AUTO-LOGIN SESSION
+           ========================================================= */
+        function checkAdminSession() {
+            const sessionData = localStorage.getItem('adminSession');
+            if(sessionData) {
+                const session = JSON.parse(sessionData);
+                const now = Date.now();
+                if(now < session.expiryTime) {
+                    isSuperAdminLoggedIn = true;
+                    adminSessionExpiryTime = session.expiryTime;
+                    updateSessionDisplay();
+                    navigateTo('adminDashboard');
+                    switchAdminTab('viewAllData');
+                    document.getElementById('webDevBtn').style.display = 'none';
+                    document.getElementById('logoutBtn').style.display = 'inline-flex';
+                    startSessionTimer();
+                    showToast('✅ Auto-logged in from previous 72-hour session!', 'success');
+                } else {
+                    localStorage.removeItem('adminSession');
+                }
+            }
+        }
+
+        function updateSessionDisplay() {
+            if(isSuperAdminLoggedIn && adminSessionExpiryTime) {
+                const now = Date.now();
+                const remaining = Math.max(0, Math.floor((adminSessionExpiryTime - now) / 1000 / 60)); // minutes
+                const hours = Math.floor(remaining / 60);
+                const mins = remaining % 60;
+                document.getElementById('sessionDisplay').innerHTML = `<span class="session-timer">⏱️ Session: ${hours}h ${mins}m remaining</span>`;
+                document.getElementById('sessionDisplay').style.display = 'block';
+            }
+        }
+
+        function startSessionTimer() {
+            const interval = setInterval(() => {
+                if(!isSuperAdminLoggedIn) {
+                    clearInterval(interval);
+                    return;
+                }
+                updateSessionDisplay();
+                if(adminSessionExpiryTime && Date.now() >= adminSessionExpiryTime) {
+                    clearInterval(interval);
+                    logoutAdmin();
+                }
+            }, 10000); // Update every 10 seconds
+        }
 
         /* =========================================================
            3. FULLY RESTORED CENTRALIZED DATABASE (100% DATA SAFE)
@@ -1213,7 +1272,7 @@
             { roll: "23206270", reg: "2414B260023", name: "MD NASAR", father: "JABIR", mother: "ARSHIDA KHATOON", gender: "Male", religion: "Muslim", category: "EBC", mobile: "+91-XXXXXXXXXX", apar: "Pending", major: "Mathematics", status: "PASS", photo: "", docs: [], trMarks: {} },
             { roll: "23206271", reg: "2414B260024", name: "PINKU KUMAR", father: "SARINDHAR YADAV", mother: "RANI DEVI", gender: "Male", religion: "Hindu", category: "BC", mobile: "+91-XXXXXXXXXX", apar: "Pending", major: "Mathematics", status: "PROMOTED", photo: "", docs: [], trMarks: {} },
             { roll: "23206272", reg: "2414B260025", name: "KARAN KUMAR", father: "RAJ KUMAR BISHWAS", mother: "LILA DEVI", gender: "Male", religion: "Hindu", category: "BC", mobile: "+91-XXXXXXXXXX", apar: "Pending", major: "Mathematics", status: "PASS", photo: "", docs: [], trMarks: {} },
-            { roll: "23206273", reg: "2414B260026", name: "ISHTAKHAR", father: "REHAMAN", mother: "NAJVEEN", gender: "Male", religion: "Muslim", category: "BC", mobile: "+91-XXXXXXXXXX", apar: "Pending", major: "Mathematics", status: "PROMOTED", photo: "", docs: [], trMarks: {} },
+            { roll: "23206273", reg: "2414B260026", name: "ISHTAKHAR", father: "REHAMAN", mother: "NEJVEEN", gender: "Male", religion: "Muslim", category: "BC", mobile: "+91-XXXXXXXXXX", apar: "Pending", major: "Mathematics", status: "PROMOTED", photo: "", docs: [], trMarks: {} },
             { roll: "23206274", reg: "2414B260027", name: "JAYA BHARTI", father: "ASHUTOSH KUMAR RAJEEV", mother: "SHIKHA DEVI", gender: "Female", religion: "Hindu", category: "General", mobile: "+91-XXXXXXXXXX", apar: "Pending", major: "Mathematics", status: "PASS", photo: "", docs: [], trMarks: {} },
             { roll: "23206275", reg: "2414B260028", name: "MOHIT KUMAR PASWAN", father: "SANJAY PASWAN", mother: "ANITA DEVI", gender: "Male", religion: "Hindu", category: "SC", mobile: "+91-XXXXXXXXXX", apar: "Pending", major: "Mathematics", status: "PROMOTED", photo: "", docs: [], trMarks: {} },
             { roll: "23206276", reg: "2414B260029", name: "AMAN KUMAR YADAV", father: "MANOJ YADAV", mother: "SHOBHA DEVI", gender: "Male", religion: "Hindu", category: "BC", mobile: "+91-XXXXXXXXXX", apar: "Pending", major: "Mathematics", status: "PROMOTED", photo: "", docs: [], trMarks: {} },
@@ -1454,8 +1513,8 @@
                 if(document.querySelector('#homeActionButtons button:nth-child(5)')) document.querySelector('#homeActionButtons button:nth-child(5)').style.display = settings.report ? 'inline-flex' : 'none';
 
                 // Profile Layout Elements
-                if(document.getElementById('uiProfilePhoto')) document.getElementById('uiProfilePhoto').style.visibility = settings.photo ? 'visible' : 'hidden'; // used visibility to preserve flex layout
-                if(!settings.verified && document.getElementById('stVerifiedBadge')) document.getElementById('stVerifiedBadge').style.display = 'none'; // Overrides logic
+                if(document.getElementById('uiProfilePhoto')) document.getElementById('uiProfilePhoto').style.visibility = settings.photo ? 'visible' : 'hidden'; 
+                if(!settings.verified && document.getElementById('stVerifiedBadge')) document.getElementById('stVerifiedBadge').style.display = 'none'; 
                 document.querySelectorAll('.ui-print-btn').forEach(btn => btn.style.display = settings.print ? 'inline-flex' : 'none');
                 if(document.getElementById('uiVault')) document.getElementById('uiVault').style.display = settings.vault ? 'block' : 'none';
                 
@@ -1484,9 +1543,9 @@
                         el.style.display = isVisible ? 'table-cell' : 'none';
                     });
                 };
-                toggleCol(3, settings.ciaCol);    // CIA is 3rd col
-                toggleCol(4, settings.theoryCol); // Theory is 4th col
-                toggleCol(5, settings.totalCol);  // Total is 5th col
+                toggleCol(3, settings.ciaCol);
+                toggleCol(4, settings.theoryCol);
+                toggleCol(5, settings.totalCol);
 
                 // Update Admin Checkboxes to match DB visually
                 Object.keys(settings).forEach(key => {
@@ -1537,7 +1596,7 @@
         });
 
         /* =========================================================
-           8. CORE SEARCH & TR MARKSHEET LOGIC (WITH AUTO CALCULATION)
+           8. FEATURE 2 & 3: REAL-TIME TR SYNC + AUTO-TAB NAVIGATION
            ========================================================= */
         function liveSearch(searchType) {
             const inputElement = document.getElementById(searchType === 'roll' ? 'rollSearchInput' : 'regSearchInput');
@@ -1594,62 +1653,17 @@
                     verifiedBadge.style.display = (student.reg !== "Pending" && student.reg !== "") ? 'inline-block' : 'none';
                 }
 
+                // REAL-TIME SYNC: Listen for live updates to this student's marks
+                database.ref('studentTRMarks/' + student.roll).on('value', snapshot => {
+                    if(snapshot.val() && currentActiveStudent && currentActiveStudent.roll === student.roll) {
+                        currentActiveStudent.trMarks = snapshot.val();
+                        renderStudentMarksheet(); // Re-render marksheet with new data
+                        showToast('📡 Marksheet Updated in Real-Time!', 'success');
+                    }
+                });
+
                 // Render Marksheet (6 Subjects Auto Calc based on Sketch 1)
-                const trBody = document.getElementById('trMarksBody');
-                trBody.innerHTML = '';
-                let grandTotal = 0;
-                let isPromoted = false;
-                
-                if (student.trMarks && Object.keys(student.trMarks).length > 0) {
-                    trSubjects.forEach((subCode, index) => {
-                        let cia = ""; let theory = ""; let totalHtml = "";
-                        
-                        if(student.trMarks[subCode]) {
-                            cia = parseFloat(student.trMarks[subCode].cia) || 0;
-                            theory = parseFloat(student.trMarks[subCode].theory) || 0;
-                            let subTotal = cia + theory;
-                            grandTotal += subTotal;
-                            
-                            // Check rule: Theory must be >= 31.5, CIA >= 13
-                            let promoteTag = "";
-                            if(theory < 31.5 || cia < 13) {
-                                promoteTag = `<br><span style="color: var(--danger-red); font-size: 0.8rem;">(Promoted)</span>`;
-                                isPromoted = true;
-                            }
-                            totalHtml = `<strong>${subTotal}</strong> ${promoteTag}`;
-                        }
-
-                        trBody.innerHTML += `
-                            <tr>
-                                <td>${index + 1}</td>
-                                <td style="text-align: left; font-weight:700;">${subCode}</td>
-                                <td>${cia !== "" ? cia : ''}</td>
-                                <td>${theory !== "" ? theory : ''}</td>
-                                <td style="background: #fdfefe;">${totalHtml}</td>
-                            </tr>`;
-                    });
-
-                    document.getElementById('stGrandTotal').innerText = grandTotal;
-                    
-                    // Auto-Assign Status Badge based on calculations
-                    const profileBadge = document.getElementById('stStatusBadge');
-                    let finalStatus = student.status; // Fallback to manual status
-                    if (isPromoted) finalStatus = "PROMOTED";
-                    else if (grandTotal > 0) finalStatus = "PASS";
-
-                    profileBadge.innerText = finalStatus;
-                    profileBadge.className = `status-badge ${finalStatus === 'PASS' ? 'status-pass' : (finalStatus === 'FAIL' ? 'status-fail' : 'status-promoted')}`; 
-
-                } else {
-                    trBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--danger-red); font-weight:600; padding: 20px;">Digital TR Marks data not yet uploaded for this Roll Number.</td></tr>`;
-                    document.getElementById('stGrandTotal').innerText = "0";
-                    document.getElementById('stStatusBadge').innerText = "PENDING";
-                    document.getElementById('stStatusBadge').className = "status-badge";
-                }
-
-                // Re-apply Dimension settings to maintain column visibility
-                applyDimensionSettings();
-
+                renderStudentMarksheet();
                 navigateTo('studentProfile');
                 showToast(`Profile & TR Loaded for: ${student.roll}`, 'success');
             } else {
@@ -1657,8 +1671,68 @@
             }
         }
 
+        function renderStudentMarksheet() {
+            if(!currentActiveStudent) return;
+            
+            const student = currentActiveStudent;
+            const trBody = document.getElementById('trMarksBody');
+            trBody.innerHTML = '';
+            let grandTotal = 0;
+            let isPromoted = false;
+            
+            if (student.trMarks && Object.keys(student.trMarks).length > 0) {
+                trSubjects.forEach((subCode, index) => {
+                    let cia = ""; let theory = ""; let totalHtml = "";
+                    
+                    if(student.trMarks[subCode]) {
+                        cia = parseFloat(student.trMarks[subCode].cia) || 0;
+                        theory = parseFloat(student.trMarks[subCode].theory) || 0;
+                        let subTotal = cia + theory;
+                        grandTotal += subTotal;
+                        
+                        // Check rule: Theory must be >= 31.5, CIA >= 13
+                        let promoteTag = "";
+                        if(theory < 31.5 || cia < 13) {
+                            promoteTag = `<br><span style="color: var(--danger-red); font-size: 0.8rem;">(Promoted)</span>`;
+                            isPromoted = true;
+                        }
+                        totalHtml = `<strong>${subTotal}</strong> ${promoteTag}`;
+                    }
+
+                    trBody.innerHTML += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td style="text-align: left; font-weight:700;">${subCode}</td>
+                            <td>${cia !== "" ? cia : ''}</td>
+                            <td>${theory !== "" ? theory : ''}</td>
+                            <td style="background: #fdfefe;">${totalHtml}</td>
+                        </tr>`;
+                });
+
+                document.getElementById('stGrandTotal').innerText = grandTotal;
+                
+                // Auto-Assign Status Badge based on calculations
+                const profileBadge = document.getElementById('stStatusBadge');
+                let finalStatus = student.status; // Fallback to manual status
+                if (isPromoted) finalStatus = "PROMOTED";
+                else if (grandTotal > 0) finalStatus = "PASS";
+
+                profileBadge.innerText = finalStatus;
+                profileBadge.className = `status-badge ${finalStatus === 'PASS' ? 'status-pass' : (finalStatus === 'FAIL' ? 'status-fail' : 'status-promoted')}`; 
+
+            } else {
+                trBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--danger-red); font-weight:600; padding: 20px;">Digital TR Marks data not yet uploaded for this Roll Number.</td></tr>`;
+                document.getElementById('stGrandTotal').innerText = "0";
+                document.getElementById('stStatusBadge').innerText = "PENDING";
+                document.getElementById('stStatusBadge').className = "status-badge";
+            }
+
+            // Re-apply Dimension settings to maintain column visibility
+            applyDimensionSettings();
+        }
+
         /* =========================================================
-           9. TR UPLOAD REGISTER (BASED ON SKETCH 2)
+           9. TR UPLOAD REGISTER WITH AUTO-TAB & REAL-TIME SYNC
            ========================================================= */
         function addOrFetchTrRoll() {
             const roll = document.getElementById('liveTrRollInput').value.trim();
@@ -1688,13 +1762,40 @@
                 <td style="font-weight:bold; color: var(--primary-blue);">${roll}</td>
             `;
 
-            // Build 6 Subjects input columns
-            trSubjects.forEach(sub => {
+            // Build 6 Subjects input columns with AUTO-TAB & AUTO-SYNC features
+            trSubjects.forEach((sub, subIdx) => {
                 let ciaVal = (student.trMarks && student.trMarks[sub] && student.trMarks[sub].cia !== undefined) ? student.trMarks[sub].cia : "";
                 let thVal = (student.trMarks && student.trMarks[sub] && student.trMarks[sub].theory !== undefined) ? student.trMarks[sub].theory : "";
+                
                 rowHtml += `
-                    <td><input type="number" class="reg-input" data-roll="${roll}" data-sub="${sub}" data-type="cia" value="${ciaVal}" style="width: 50px; text-align: center; border: 1px solid #ccc; outline:none;"></td>
-                    <td><input type="number" class="reg-input" data-roll="${roll}" data-sub="${sub}" data-type="theory" value="${thVal}" style="width: 60px; text-align: center; border: 1px solid #ccc; outline:none;"></td>
+                    <td>
+                        <input 
+                            type="number" 
+                            class="reg-input" 
+                            data-roll="${roll}" 
+                            data-sub="${sub}" 
+                            data-type="cia" 
+                            data-subidx="${subIdx}"
+                            value="${ciaVal}" 
+                            style="width: 50px; text-align: center; border: 1px solid #ccc; outline:none;"
+                            onchange="syncMarksToDB('${roll}', '${sub}')"
+                            onkeydown="handleTabNavigation(event, '${roll}', ${subIdx}, 'cia')"
+                        >
+                    </td>
+                    <td>
+                        <input 
+                            type="number" 
+                            class="reg-input" 
+                            data-roll="${roll}" 
+                            data-sub="${sub}" 
+                            data-type="theory" 
+                            data-subidx="${subIdx}"
+                            value="${thVal}" 
+                            style="width: 60px; text-align: center; border: 1px solid #ccc; outline:none;"
+                            onchange="syncMarksToDB('${roll}', '${sub}')"
+                            onkeydown="handleTabNavigation(event, '${roll}', ${subIdx}, 'theory')"
+                        >
+                    </td>
                 `;
             });
 
@@ -1715,13 +1816,80 @@
             tbody.appendChild(tr);
 
             document.getElementById('liveTrRollInput').value = "";
-            document.getElementById('liveTrRollStatus').innerText = isNew ? "New Profile Created & Loaded" : "Existing Profile Loaded";
+            document.getElementById('liveTrRollStatus').innerText = isNew ? "✅ New Profile Created & Loaded" : "✅ Existing Profile Loaded";
             setTimeout(() => document.getElementById('liveTrRollStatus').innerText = "", 3000);
+        }
+
+        // AUTO-TAB NAVIGATION: Pressing TAB or Decimal (.) jumps to next column
+        function handleTabNavigation(event, roll, subIdx, type) {
+            if(event.key === 'Tab' || event.key === '.') {
+                event.preventDefault();
+                
+                const inputs = document.querySelectorAll(`.reg-input[data-roll="${roll}"]`);
+                let currentIdx = -1;
+                let currentType = type;
+                
+                // Find current input
+                for(let i = 0; i < inputs.length; i++) {
+                    if(inputs[i] === event.target) {
+                        currentIdx = i;
+                        break;
+                    }
+                }
+
+                if(currentIdx >= 0 && currentIdx + 1 < inputs.length) {
+                    // Move to next input
+                    inputs[currentIdx + 1].focus();
+                    inputs[currentIdx + 1].select();
+                } else if(currentIdx >= 0 && currentIdx + 1 === inputs.length) {
+                    // Last input - jump to Status Dropdown
+                    const statusSelect = document.getElementById(`regStatus_${roll}`);
+                    if(statusSelect) statusSelect.focus();
+                }
+
+                // Sync current value to DB immediately
+                syncMarksToDB(roll, inputs[currentIdx].dataset.sub);
+            }
+        }
+
+        // REAL-TIME SYNC: Upload marks to Firebase immediately
+        function syncMarksToDB(roll, subject) {
+            const inputs = document.querySelectorAll(`.reg-input[data-roll="${roll}"][data-sub="${subject}"]`);
+            if(inputs.length < 2) return;
+
+            const cia = parseFloat(inputs[0].value) || "";
+            const theory = parseFloat(inputs[1].value) || "";
+
+            if(cia !== "" || theory !== "") {
+                // Update centralDatabase locally
+                const sIdx = centralDatabase.findIndex(s => s.roll === roll);
+                if(sIdx >= 0) {
+                    if(!centralDatabase[sIdx].trMarks) centralDatabase[sIdx].trMarks = {};
+                    centralDatabase[sIdx].trMarks[subject] = { cia: cia !== "" ? cia : "", theory: theory !== "" ? theory : "" };
+                }
+
+                // Sync to Firebase in real-time
+                database.ref('studentTRMarks/' + roll + '/' + subject).set({
+                    cia: cia !== "" ? cia : "",
+                    theory: theory !== "" ? theory : ""
+                });
+
+                // Update admin table visually
+                document.querySelectorAll('#adminTrTable tbody tr').forEach(row => {
+                    if(row.innerText.includes(roll)) {
+                        row.style.background = '#fffacd'; // Highlight recently updated
+                        setTimeout(() => row.style.background = '', 2000);
+                    }
+                });
+
+                showToast(`✅ Marks auto-synced for Roll: ${roll}, Subject: ${subject}`, 'success');
+            }
         }
 
         function saveAllTrData() {
             const inputs = document.querySelectorAll('.reg-input');
             let updatedRolls = new Set();
+            let updates = {};
             
             inputs.forEach(input => {
                 const roll = input.dataset.roll;
@@ -1738,13 +1906,19 @@
                         centralDatabase[sIdx].trMarks[sub][type] = parseFloat(val);
                         centralDatabase[sIdx].status = document.getElementById(`regStatus_${roll}`).value;
                         updatedRolls.add(roll);
+
+                        // Prepare Firebase update
+                        updates[`studentTRMarks/${roll}/${sub}/${type}`] = parseFloat(val);
                     }
                 }
             });
 
             if(updatedRolls.size > 0) {
-                showToast(`Successfully saved Marks/Status for ${updatedRolls.size} Roll Numbers!`, 'success');
-                logSystemAction('TR REGISTER UPLOAD', `Updated TR for Rolls: ${Array.from(updatedRolls).join(', ')}`, 'Success');
+                // Perform batch update to Firebase
+                database.ref().update(updates).then(() => {
+                    showToast(`✅ Successfully saved & synced Marks for ${updatedRolls.size} Roll Numbers in Real-Time!`, 'success');
+                    logSystemAction('TR REGISTER UPLOAD', `Real-time synced TR for Rolls: ${Array.from(updatedRolls).join(', ')}`, 'Success');
+                }).catch(err => showToast('Firebase sync error: ' + err.message, 'error'));
             } else {
                 showToast("No marks data found to save.", "error");
             }
@@ -1756,11 +1930,30 @@
         function verifyAdminLogin() {
             if (document.getElementById('adminId').value === ADMIN_ID && document.getElementById('adminPass').value === ADMIN_PASS) {
                 isSuperAdminLoggedIn = true;
-                showToast('Welcome Web Dev Admin!', 'success');
-                document.getElementById('adminId').value = ''; document.getElementById('adminPass').value = '';
+                
+                // Set 72-hour expiry time
+                const expiryTime = Date.now() + (72 * 60 * 60 * 1000); // 72 hours
+                adminSessionExpiryTime = expiryTime;
+                
+                // Save session to localStorage for auto-login
+                localStorage.setItem('adminSession', JSON.stringify({
+                    loginTime: Date.now(),
+                    expiryTime: expiryTime
+                }));
+
+                showToast('✅ Welcome Web Dev Admin! 72-Hour Session Activated!', 'success');
+                document.getElementById('adminId').value = ''; 
+                document.getElementById('adminPass').value = '';
+                
+                // Update UI
+                document.getElementById('webDevBtn').style.display = 'none';
+                document.getElementById('logoutBtn').style.display = 'inline-flex';
+                updateSessionDisplay();
+                startSessionTimer();
+                
                 navigateTo('adminDashboard');
                 switchAdminTab('viewAllData');
-                logSystemAction('ADMIN LOGIN', 'Web Dev Session Started securely', 'Success');
+                logSystemAction('ADMIN LOGIN', 'Web Dev Session Started securely (72-Hour)', 'Success');
             } else {
                 showToast('Invalid Credentials.', 'error');
             }
@@ -1768,7 +1961,12 @@
 
         function logoutAdmin() {
             isSuperAdminLoggedIn = false;
-            showToast('Logged out securely.', 'success');
+            adminSessionExpiryTime = null;
+            localStorage.removeItem('adminSession');
+            showToast('✅ Logged out securely. Session data cleared.', 'success');
+            document.getElementById('webDevBtn').style.display = 'inline-flex';
+            document.getElementById('logoutBtn').style.display = 'none';
+            document.getElementById('sessionDisplay').style.display = 'none';
             navigateTo('homePage');
         }
 
@@ -1811,7 +2009,8 @@
                 document.getElementById('entryName').value = s.name; document.getElementById('entryFather').value = s.father;
                 document.getElementById('entryMother').value = s.mother; document.getElementById('entryMobile').value = s.mobile;
                 document.getElementById('entryGender').value = s.gender; document.getElementById('entryCategory').value = s.category;
-                document.getElementById('entryApar').value = s.apar; document.getElementById('entryMajor').value = s.major; document.getElementById('entryStatus').value = s.status;
+                document.getElementById('entryApar').value = s.apar; document.getElementById('entryMajor').value = s.major; 
+                document.getElementById('entryStatus').value = s.status;
                 switchAdminTab('uploadData');
                 showToast(`Editing Roll No: ${roll}`, 'success');
             }
@@ -1825,49 +2024,63 @@
         }
 
         // Add/Edit Save Form Logic
-        document.getElementById('saveRecordBtn').onclick = function(e) {
-            e.preventDefault();
-            const roll = document.getElementById('entryRoll').value.trim();
-            if(!roll) return showToast('Roll Number required!', 'error');
+        document.addEventListener('DOMContentLoaded', function() {
+            const saveBtn = document.getElementById('saveRecordBtn');
+            const clearBtn = document.getElementById('clearFormBtn');
             
-            let sIdx = centralDatabase.findIndex(s => s.roll === roll);
-            let updatedData = {
-                roll, reg: document.getElementById('entryReg').value || 'Pending',
-                name: document.getElementById('entryName').value || 'Data Awaited',
-                father: document.getElementById('entryFather').value || 'Data Awaited',
-                mother: document.getElementById('entryMother').value || 'Pending',
-                mobile: document.getElementById('entryMobile').value || 'Pending',
-                gender: document.getElementById('entryGender').value,
-                category: document.getElementById('entryCategory').value,
-                religion: document.getElementById('entryReligion').value,
-                apar: document.getElementById('entryApar').value || 'Pending',
-                major: document.getElementById('entryMajor').value,
-                status: document.getElementById('entryStatus').value
-            };
+            if(saveBtn) {
+                saveBtn.onclick = function(e) {
+                    e.preventDefault();
+                    const roll = document.getElementById('entryRoll').value.trim();
+                    if(!roll) return showToast('Roll Number required!', 'error');
+                    
+                    let sIdx = centralDatabase.findIndex(s => s.roll === roll);
+                    let updatedData = {
+                        roll, reg: document.getElementById('entryReg').value || 'Pending',
+                        name: document.getElementById('entryName').value || 'Data Awaited',
+                        father: document.getElementById('entryFather').value || 'Data Awaited',
+                        mother: document.getElementById('entryMother').value || 'Pending',
+                        mobile: document.getElementById('entryMobile').value || 'Pending',
+                        gender: document.getElementById('entryGender').value,
+                        category: document.getElementById('entryCategory').value,
+                        religion: document.getElementById('entryReligion').value,
+                        apar: document.getElementById('entryApar').value || 'Pending',
+                        major: document.getElementById('entryMajor').value,
+                        status: document.getElementById('entryStatus').value
+                    };
 
-            if(sIdx >= 0) { centralDatabase[sIdx] = { ...centralDatabase[sIdx], ...updatedData }; } 
-            else { centralDatabase.push({ ...updatedData, photo: "", docs: [], trMarks: {} }); }
-            
-            showToast('Record Saved!', 'success');
-            document.getElementById('clearFormBtn').click();
-            switchAdminTab('viewAllData');
-        };
+                    if(sIdx >= 0) { centralDatabase[sIdx] = { ...centralDatabase[sIdx], ...updatedData }; } 
+                    else { centralDatabase.push({ ...updatedData, photo: "", docs: [], trMarks: {} }); }
+                    
+                    showToast('Record Saved!', 'success');
+                    clearBtn.click();
+                    switchAdminTab('viewAllData');
+                };
+            }
 
-        document.getElementById('clearFormBtn').onclick = function(e) {
-            e.preventDefault();
-            ['Roll','Reg','Name','Father','Mother','Mobile','Apar'].forEach(id => document.getElementById('entry'+id).value = '');
-        };
+            if(clearBtn) {
+                clearBtn.onclick = function(e) {
+                    e.preventDefault();
+                    ['Roll','Reg','Name','Father','Mother','Mobile','Apar'].forEach(id => document.getElementById('entry'+id).value = '');
+                };
+            }
 
-        // Command Center AI Injection (Legacy support for old tr rows)
-        document.getElementById('executeCodeBtn').onclick = function(e) {
-            e.preventDefault();
-            showToast('AI Injection command fired. Check logs for parsing.', 'success');
-            logSystemAction('AI INJECTION', 'Attempted to parse HTML rows', 'Success');
-            document.getElementById('aiCodeInput').value = '';
-        };
+            const executeCodeBtn = document.getElementById('executeCodeBtn');
+            if(executeCodeBtn) {
+                executeCodeBtn.onclick = function(e) {
+                    e.preventDefault();
+                    showToast('AI Injection command fired. Check logs for parsing.', 'success');
+                    logSystemAction('AI INJECTION', 'Attempted to parse HTML rows', 'Success');
+                    document.getElementById('aiCodeInput').value = '';
+                };
+            }
+        });
 
         // On Load Logic
         window.onload = function() {
+            // Check for existing admin session first
+            checkAdminSession();
+            
             // Register user in Firebase presence system
             database.ref('activeUsers/' + myUserId).set({ online: true, time: new Date().toLocaleTimeString() });
             database.ref('activeUsers/' + myUserId).onDisconnect().remove();
@@ -1880,8 +2093,11 @@
             });
 
             logActivity("Portal Initialized. Viewed Home Page.");
-            console.log("Portal Initialized successfully. 100% Data Restored. User Dimension Active.");
+            console.log("✅ Portal Initialized successfully!");
+            console.log("✅ FEATURE 1: 72-Hour Auto-Login Session - ENABLED");
+            console.log("✅ FEATURE 2: Real-Time TR Sync - ENABLED (Firebase Listening)");
+            console.log("✅ FEATURE 3: Auto-Tab Navigation in TR Register - ENABLED");
         };
     </script>
 </body>
-</html>
+    </html>
